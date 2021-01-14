@@ -1,0 +1,155 @@
+1-create a new angular project using angular CLI.
+2- install 
+     npm install todomvc-app-css
+     npm install todomvc-common
+3- Update Angular.json to add the todoMVC css files.
+	- Add to the "styles" attributes in the Angular.json
+	      "node_modules/todomvc-common/base.css",
+              "node_modules/todomvc-app-css/index.css"
+4- update index.html to add a footer
+   <footer class="info">
+    <p>Double-click to edit a todo</p>
+    <p>
+      Created by <a href=https://github.com/Dali2579?tab=repositories">Mohamed Ali Ben Amor</a> 
+      using <a href="http://angular.io">Angular2</a>
+    </p>
+    <p>Part of <a href="http://todomvc.com">TodoMVC</a> and <a href="https://pouchdb.com/getting-started.html">pouchdb</a></p>
+    
+  </footer>
+
+
+5- add a new model file
+export class Todo {
+_id:string
+	completed: boolean;
+	editing: boolean;
+
+	private _title: String;
+	get title() {
+		return this._title;
+	}
+	set title(value: String) {
+		this._title = value.trim();
+	}
+
+	constructor(title: String) {
+		this.completed = false;
+		this.editing = false;
+		this.title = title.trim();
+	}
+}
+6- Add a new service 
+ng n s TodoStore
+export class TodoStore {
+	todos: Array<Todo>;
+
+	constructor() {
+		let persistedTodos = JSON.parse(localStorage.getItem('angular2-todos') || '[]');
+		// Normalize back into classes
+		this.todos = persistedTodos.map( (todo: {_title: String, completed: boolean}) => {
+			let ret = new Todo(todo._title);
+			ret.completed = todo.completed;
+			return ret;
+		});
+	}
+
+	private updateStore() {
+		localStorage.setItem('angular2-todos', JSON.stringify(this.todos));
+	}
+
+	private getWithCompleted(completed: Boolean) {
+		return this.todos.filter((todo: Todo) => todo.completed === completed);
+	}
+
+	allCompleted() {
+		return this.todos.length === this.getCompleted().length;
+	}
+
+	setAllTo(completed: Boolean) {
+		this.todos.forEach((t: Todo) => t.completed = completed);
+		this.updateStore();
+	}
+
+	removeCompleted() {
+		this.todos = this.getWithCompleted(false);
+		this.updateStore();
+	}
+
+	getRemaining() {
+		return this.getWithCompleted(false);
+	}
+
+	getCompleted() {
+		return this.getWithCompleted(true);
+	}
+
+	toggleCompletion(todo: Todo) {
+		todo.completed = !todo.completed;
+		this.updateStore();
+	}
+
+	remove(todo: Todo) {
+		this.todos.splice(this.todos.indexOf(todo), 1);
+		this.updateStore();
+	}
+
+	add(title: String) {
+		this.todos.push(new Todo(title));
+		this.updateStore();
+	}
+}
+
+
+7- update app.component.html
+<section class="todoapp">
+	<header class="header">
+		<h1>todos</h1>
+		<input class="new-todo" placeholder="What needs to be done?" autofocus="" [(ngModel)]="newTodoText" (keyup.enter)="addTodo()">
+	</header>
+	<section class="main" *ngIf="todoStore.todos.length > 0">
+		<input id="toggle-all" class="toggle-all" type="checkbox" *ngIf="todoStore.todos.length" #toggleall [checked]="todoStore.allCompleted()" (click)="todoStore.setAllTo(toggleall.checked)">
+		<ul class="todo-list">
+			<li *ngFor="let todo of todoStore.todos" [class.completed]="todo.completed" [class.editing]="todo.editing">
+				<div class="view">
+					<input class="toggle" type="checkbox" (click)="toggleCompletion(todo)" [checked]="todo.completed">
+					<label (dblclick)="editTodo(todo)">{{todo.title}}</label>
+					<button class="destroy" (click)="remove(todo)"></button>
+				</div>
+				<input class="edit" *ngIf="todo.editing" [value]="todo.title" #editedtodo (blur)="stopEditing(todo, editedtodo.value)" (keyup.enter)="updateEditingTodo(todo, editedtodo.value)" (keyup.escape)="cancelEditingTodo(todo)">
+			</li>
+		</ul>
+	</section>
+	<footer class="footer" *ngIf="todoStore.todos.length > 0">
+		<span class="todo-count"><strong>{{todoStore.getRemaining().length}}</strong> {{todoStore.getRemaining().length == 1 ? 'item' : 'items'}} left</span>
+		<button class="clear-completed" *ngIf="todoStore.getCompleted().length > 0" (click)="removeCompleted()">Clear completed</button>
+	</footer>
+</section>
+
+8- Add pouchDB npm i pouchdb
+9- Add pouchDB type npm i @types/pouchdb
+10- update tsconfig.json and add the below attribites to "compilerOptions"
+  "forceConsistentCasingInFileNames": true,
+    "allowSyntheticDefaultImports": true,  
+    "noImplicitAny": false   
+11- update polyfills.ts and add
+(window as any).global = window;
+
+12- add a declaration of pouchDb in the TodoStoreService
+    db: any;
+    listener:EventEmitter<any>=new EventEmitter();
+    remoteCouch:string = "";
+13- in the service constructor add
+this.db=new PouchDB("angularpouchdbtodomvc");   
+
+Once you have included this code, you should be able to refresh the page to see any todos you have entered.
+
+14- add a new attribute to the service
+ listener:EventEmitter<any>=new EventEmitter();
+the event emmiter will emit an event to the todo component each time we have a change in the pouchdb.
+
+15- add a getter to the service to epose the listner.
+
+16- in the appComponenet class, in the ngOninit method subscribe to the eventEmiter provided by the datasoreservice.
+
+
+
