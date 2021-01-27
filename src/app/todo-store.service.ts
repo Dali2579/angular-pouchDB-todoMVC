@@ -7,7 +7,7 @@ import PouchDB from "pouchdb";
 export class TodoStoreService {
 	db: any;
 	pouchDbListener: EventEmitter<any> = new EventEmitter();
-	remoteCouch: string = "http://localhost:5984/angularpouchdbtodomvc";
+	remoteCouch: string = "https://apikey-v2-xpr4pf78ynije6aecc2fwvtt0ry6j09y3dsstabtk76:2b89ced1c7a482b00660ecb52cdcbce5@eb7da67c-420f-4c17-b8af-e4880f8703b3-bluemix.cloudantnosqldb.appdomain.cloud/angularpouchdbtodomvc";
 	todos: Array<todo>;
 	constructor() {
 		this.db = new PouchDB("angularpouchdbtodomvc");		
